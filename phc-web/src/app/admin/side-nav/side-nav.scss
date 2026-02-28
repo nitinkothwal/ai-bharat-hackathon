@@ -1,0 +1,20 @@
+.logo-container {
+    padding: 20px;
+    text-align: center;
+
+    img {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+}
+
+.mat-nav-list {
+    padding-top: 0;
+}
+
+a.mat-mdc-list-item.active {
+    background: rgba(103, 58, 183, 0.1);
+    color: #673ab7;
+    font-weight: 600;
+}

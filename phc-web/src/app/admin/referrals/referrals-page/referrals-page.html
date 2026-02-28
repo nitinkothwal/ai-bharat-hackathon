@@ -1,0 +1,64 @@
+<div class="page-container">
+    <div class="page-header">
+        <h1>Referral Queue</h1>
+    </div>
+
+    <div class="table-container mat-elevation-z1">
+        <table mat-table [dataSource]="referrals()">
+            <ng-container matColumnDef="risk">
+                <th mat-header-cell *matHeaderCellDef>Risk</th>
+                <td mat-cell *matCellDef="let ref">
+                    <span class="risk-indicator" [ngClass]="'risk-' + ref.risk_level"
+                        [title]="'Score: ' + (ref.risk_score || 0)"></span>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="referral_id">
+                <th mat-header-cell *matHeaderCellDef>ID</th>
+                <td mat-cell *matCellDef="let ref">
+                    <a [routerLink]="[ref.referral_id, 'details']">{{ ref.referral_id }}</a>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="patient_id">
+                <th mat-header-cell *matHeaderCellDef>Patient ID</th>
+                <td mat-cell *matCellDef="let ref">
+                    <a [routerLink]="['/admin/patients', ref.patient_id, 'details']">{{ ref.patient_id }}</a>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Type</th>
+                <td mat-cell *matCellDef="let ref">{{ ref.referral_type | titlecase }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let ref">
+                    <mat-chip highlighted>{{ ref.status | uppercase }}</mat-chip>
+                </td>
+            </ng-container>
+
+            <ng-container matColumnDef="created_at">
+                <th mat-header-cell *matHeaderCellDef>Submitted</th>
+                <td mat-cell *matCellDef="let ref">{{ ref.created_at | date:'short' }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Details</th>
+                <td mat-cell *matCellDef="let ref">
+                    <button mat-icon-button [routerLink]="[ref.referral_id, 'details']">
+                        <mat-icon>chevron_right</mat-icon>
+                    </button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        @if (referrals().length === 0) {
+        <div class="empty-state">No referrals in the queue.</div>
+        }
+    </div>
+</div>

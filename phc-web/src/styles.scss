@@ -1,0 +1,14 @@
+/* You can add global styles to this file, and also import other style files */
+/* Global app styles only */
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    color-scheme: light;
+    background-color: var(--mat-sys-surface);
+    color: var(--mat-sys-on-surface);
+    font: var(--mat-sys-body-medium);
+}
