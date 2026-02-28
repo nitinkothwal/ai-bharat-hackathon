@@ -52,10 +52,49 @@ module.exports = {
                                 "Id"
                             ]
                         }
+                    },
+                    {
+                        DomainName: {
+                            "Fn::GetAtt": [
+                                "EBEnvironment",
+                                "EndpointURL"
+                            ]
+                        },
+                        Id: "EBOrigin",
+                        CustomOriginConfig: {
+                            HTTPPort: 80,
+                            HTTPSPort: 443,
+                            OriginProtocolPolicy: "http-only"
+                        }
                     }
                 ],
                 Enabled: true,
                 DefaultRootObject: "index.html",
+                CacheBehaviors: [
+                    {
+                        PathPattern: "/api/*",
+                        TargetOriginId: "EBOrigin",
+                        ViewerProtocolPolicy: "redirect-to-https",
+                        AllowedMethods: [
+                            "GET",
+                            "HEAD",
+                            "OPTIONS",
+                            "PUT",
+                            "PATCH",
+                            "POST",
+                            "DELETE"
+                        ],
+                        CachedMethods: [
+                            "GET",
+                            "HEAD"
+                        ],
+                        // Managed-CachingDisabled
+                        CachePolicyId: "4135ea2d-6df8-44a3-9df3-4b5a84be39ad",
+                        // Managed-AllViewer
+                        OriginRequestPolicyId: "216adef6-5c7f-47e4-b989-5492eafa07d3",
+                        Compress: true
+                    }
+                ],
                 DefaultCacheBehavior: {
                     TargetOriginId: "S3Origin",
                     ViewerProtocolPolicy: "redirect-to-https",
@@ -75,7 +114,21 @@ module.exports = {
                 ViewerCertificate: {
                     CloudFrontDefaultCertificate: true
                 },
-                HttpVersion: "http2"
+                HttpVersion: "http2",
+                CustomErrorResponses: [
+                    {
+                        ErrorCode: 403,
+                        ResponsePagePath: "/index.html",
+                        ResponseCode: 200,
+                        ErrorCachingMinTTL: 10
+                    },
+                    {
+                        ErrorCode: 404,
+                        ResponsePagePath: "/index.html",
+                        ResponseCode: 200,
+                        ErrorCachingMinTTL: 10
+                    }
+                ]
             }
         }
     },

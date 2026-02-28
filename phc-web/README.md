@@ -1,64 +1,50 @@
-# AITS – MCP Tools Catalog Web App
+# Bharat CareLink – PHC Dashboard
+## AI-Powered Smart Referral & Risk Intelligence Platform
 
-AITS Web App is a **standalone Angular enterprise application** that provides a user interface for managing and cataloging MCP tools.
+The Bharat CareLink Web App is a **standalone Angular dashboard** designed for Primary Health Centres (PHCs) to manage, triage, and track high-risk patient referrals from ASHA workers.
 
 ---
 
-## Tech Stack
+## 🌟 Tech Stack
 
 * **Angular 21** (Standalone components)
-* **Angular Material** (UI components)
+* **Angular Material** (Modern UI components)
 * **TypeScript**
 * **Vitest** (Unit testing)
 * **Prettier** (Code formatting)
+* **CloudFront & S3** (Optimized production hosting)
 
 ---
 
-## Prerequisites
+## 🚀 Quick Start
 
-Make sure you have the following installed on your system:
-
+### Prerequisites
 * **Node.js** (LTS recommended)
 * **npm** (v11+ recommended)
 * **Angular CLI** (v21+ recommended)
 
----
-
-## Quick Start
-
-Follow these steps to get the project running locally.
-
----
-
-## 1. Install Dependencies
-
-Clone the repository and install dependencies:
-
+### 1. Install Dependencies
 ```sh
 npm install
 ```
 
----
-
-## 2. Start the Development Server
-
-Run the application in development mode:
-
+### 2. Start Development Server
 ```sh
 npm start
 ```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
----
-
-## 3. Configuration
-
-For environment-specific settings (local, staging, production), refer to the configuration in `src/environments/`.
+Open [http://localhost:4200/](http://localhost:4200/). The app will automatically reload on source changes.
 
 ---
 
-## Common Scripts
+## 🛠️ Configuration
+
+Environment-specific settings (API endpoints, features) are located in `src/environments/`:
+- `environment.ts`: Local development
+- `environment.prod.ts`: Production (AWS CloudFront / Elastic Beanstalk)
+
+---
+
+## 📦 Common Scripts
 
 ```sh
 npm start           # Start local development server
@@ -69,37 +55,40 @@ npm test            # Run unit tests with Vitest
 
 ---
 
-## Project Structure (High-Level)
+## 🚢 Deployment (AWS)
 
-```text
-src/                # Application source code
-src/app/            # Main application components and modules
-src/environments/   # Environment configurations
-public/             # Static assets
-package.json        # Dependencies and scripts
-```
+The frontend is deployed to an S3 bucket and served via CloudFront.
 
----
-
-## Development Notes
-
-* This project uses **Standalone Components** as per Angular 19+ best practices.
-* Use `ng generate component component-name` to create new components.
-* Ensure consistent code style by running Prettier.
-* Unit tests are powered by **Vitest**.
-
-**Deploy build to S3**
-
+### Manual Sync (Quick Update)
 ```sh
 aws s3 sync dist/phc-web/browser s3://bharat-care-link/web/dev --delete
 ```
 
+### Automated Deployment Script
+Using the centralized infrastructure script from the project root:
+```sh
+cd ../infrastructure
+./deploy-web.sh
+```
+This script handles the build, S3 sync, and CloudFront invalidation automatically.
+
 ---
 
-## License
+## 📂 Project Structure
 
-This project contains **proprietary and confidential source code** owned by the Lenovo.
+```text
+src/                # Application source code
+src/app/            # Components, Services, and State
+src/environments/   # environment.prod.ts (API URLs)
+public/             # Static assets
+package.json        # scripts and dependencies
+deploy-web.sh       # (Moved to infrastructure/)
+```
 
-Unauthorized copying, modification, distribution, or use of this software, in whole or in part, is strictly prohibited unless explicitly permitted in writing by the Lenovo.
+---
 
-All rights reserved.
+## 🛡️ License & Social Impact
+
+This platform is developed for the **AWS AI for Bharat Hackathon** to reduce maternal and infant mortality through AI-driven referral prioritization.
+
+Copyright © 2026 Bharat CareLink. All rights reserved.
