@@ -2,35 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, FlatList, RefreshControl, View, ScrollView } from 'react-native';
 import { Text, FAB, Searchbar, useTheme, Avatar, IconButton } from 'react-native-paper';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import GlassCard from '@/components/glass/GlassCard';
-import { patientService } from '@/src/services/api';
+import { useAppSelector, useAppDispatch } from '../../src/store/hooks';
+import { fetchPatients } from '../../src/store/slices/patientsSlice';
 import { Patient } from '@/src/types';
 import { Users, AlertCircle, CheckCircle2, Search } from 'lucide-react-native';
 
-export default function HomeDashboard() {
-  const [patients, setPatients] = useState<Patient[]>([]);
+export default function PatientsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const theme = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  
+  const { patients, isLoading } = useAppSelector(state => state.patients);
+  const { user } = useAppSelector(state => state.auth);
 
-  const fetchPatients = async () => {
-    try {
-      const data = await patientService.getAll();
-      setPatients(data);
-    } catch (error) {
-      console.error('Failed to fetch patients', error);
-      // For demo purposes, if API fails, we could use mock data but let's stick to real for now
-    }
+  const fetchPatientsData = async () => {
+    dispatch(fetchPatients());
   };
 
   useEffect(() => {
-    fetchPatients();
-  }, []);
+    fetchPatientsData();
+  }, [dispatch]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await fetchPatients();
+    await fetchPatientsData();
     setRefreshing(false);
   }, []);
 
@@ -48,15 +48,21 @@ export default function HomeDashboard() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
-          <Text variant="headlineSmall" style={styles.headerTitle}>Welcome Back</Text>
-          <Text variant="bodyMedium" style={styles.headerSubtitle}>ASHA Region: North-East 12</Text>
+          <Text variant="headlineSmall" style={styles.headerTitle}>
+            {t('navigation.patients')}
+          </Text>
+          <Text variant="bodyMedium" style={styles.headerSubtitle}>
+            {user?.name || 'ASHA Worker'} • {user?.village_code || 'VIL001'}
+          </Text>
         </View>
 
         <View style={styles.statsContainer}>
           <GlassCard style={styles.statCard} intensity={0.8}>
             <View style={styles.statIconHeader}>
               <Users size={20} color={theme.colors.primary} />
-              <Text variant="titleMedium" style={{ marginLeft: 8 }}>Patients</Text>
+              <Text variant="titleMedium" style={{ marginLeft: 8 }}>
+                {t('navigation.patients')}
+              </Text>
             </View>
             <Text variant="displaySmall" style={styles.statValue}>{patients.length}</Text>
           </GlassCard>
@@ -65,14 +71,16 @@ export default function HomeDashboard() {
 
             <View style={styles.statIconHeader}>
               <AlertCircle size={20} color={theme.colors.error} />
-              <Text variant="titleMedium" style={{ marginLeft: 8 }}>High Risk</Text>
+              <Text variant="titleMedium" style={{ marginLeft: 8 }}>
+                {t('referral.high_risk')}
+              </Text>
             </View>
             <Text variant="displaySmall" style={[styles.statValue, { color: theme.colors.error }]}>3</Text>
           </GlassCard>
         </View>
 
         <Searchbar
-          placeholder="Search patients..."
+          placeholder={t('patient.search')}
           onChangeText={setSearchQuery}
           value={searchQuery}
           style={styles.searchBar}
@@ -80,10 +88,10 @@ export default function HomeDashboard() {
         />
 
         <View style={styles.sectionHeader}>
-          <Text variant="titleLarge">Recent Patients</Text>
+          <Text variant="titleLarge">{t('patient.recent_patients')}</Text>
           <IconButton
             icon="chevron-right"
-            onPress={() => router.push('/(tabs)/two')}
+            onPress={() => router.push('/patient/list')}
           />
         </View>
 
@@ -111,10 +119,10 @@ export default function HomeDashboard() {
 
       <FAB
         icon="plus"
-        label="Add Patient"
+        label={t('patient.register')}
         style={[styles.fab, { backgroundColor: theme.colors.primary }]}
         color="white"
-        onPress={() => router.push('/patient/type-select')}
+        onPress={() => router.push('/patient/register')}
       />
     </View>
   );

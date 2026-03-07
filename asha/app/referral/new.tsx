@@ -16,6 +16,10 @@ export default function NewReferralScreen() {
     const [hemoglobin, setHemoglobin] = useState('');
     const [loading, setLoading] = useState(false);
     const [riskAssessment, setRiskAssessment] = useState<{ score: number, level: string } | null>(null);
+    
+    // Validation errors
+    const [errors, setErrors] = useState<{[key: string]: string}>({});
+    const [apiError, setApiError] = useState<string>('');
 
     const theme = useTheme();
     const router = useRouter();
@@ -29,7 +33,54 @@ export default function NewReferralScreen() {
         }
     }, [patientId]);
 
+    const validateForm = () => {
+        const newErrors: {[key: string]: string} = {};
+        
+        // Symptoms validation
+        if (!symptoms.trim()) {
+            newErrors.symptoms = 'Symptoms are required';
+        } else if (symptoms.trim().length < 10) {
+            newErrors.symptoms = 'Please provide more detailed symptoms (at least 10 characters)';
+        }
+        
+        // Blood pressure validation (optional but must be valid if provided)
+        if (bp && bp.trim()) {
+            const bpPattern = /^\d{2,3}\/\d{2,3}$/;
+            if (!bpPattern.test(bp)) {
+                newErrors.bp = 'Blood pressure must be in format: 120/80';
+            } else {
+                const [systolic, diastolic] = bp.split('/').map(Number);
+                if (systolic < 70 || systolic > 250) {
+                    newErrors.bp = 'Systolic pressure must be between 70-250';
+                } else if (diastolic < 40 || diastolic > 150) {
+                    newErrors.bp = 'Diastolic pressure must be between 40-150';
+                } else if (systolic <= diastolic) {
+                    newErrors.bp = 'Systolic must be greater than diastolic';
+                }
+            }
+        }
+        
+        // Hemoglobin validation (optional but must be valid if provided)
+        if (hemoglobin && hemoglobin.trim()) {
+            const hbValue = parseFloat(hemoglobin);
+            if (isNaN(hbValue)) {
+                newErrors.hemoglobin = 'Hemoglobin must be a number';
+            } else if (hbValue < 3 || hbValue > 20) {
+                newErrors.hemoglobin = 'Hemoglobin must be between 3-20 g/dL';
+            }
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleAssessment = () => {
+        setApiError(''); // Clear any previous API errors
+        
+        if (!validateForm()) {
+            return;
+        }
+        
         // Simulate AI Risk Assessment call
         const score = Math.random();
         setRiskAssessment({
@@ -39,20 +90,70 @@ export default function NewReferralScreen() {
     };
 
     const handleCreateReferral = async () => {
-        if (!patient) return;
+        if (!patient) {
+            setApiError('Patient information is missing');
+            return;
+        }
+        
+        setApiError(''); // Clear any previous API errors
+        
+        if (!validateForm()) {
+            return;
+        }
+        
+        if (!riskAssessment) {
+            setApiError('Please run risk assessment before submitting');
+            return;
+        }
 
         setLoading(true);
         try {
+            // Prepare symptoms array
+            const symptomsArray = symptoms.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            
+            // Prepare vital signs
+            const vital_signs: any = {};
+            if (bp) {
+                const [systolic, diastolic] = bp.split('/').map(Number);
+                vital_signs.blood_pressure_systolic = systolic;
+                vital_signs.blood_pressure_diastolic = diastolic;
+            }
+            if (hemoglobin) {
+                vital_signs.hemoglobin = parseFloat(hemoglobin);
+            }
+            
+            // Determine urgency level based on risk assessment
+            let urgency_level: 'low' | 'medium' | 'high' | 'critical' = 'medium';
+            if (riskAssessment.level === 'HIGH') {
+                urgency_level = 'high';
+            } else if (riskAssessment.level === 'LOW') {
+                urgency_level = 'low';
+            }
+            
             await referralService.create({
-                patient_id: patient.id,
-                referral_type: referralType as any,
-                form_data: { symptoms, bp, hemoglobin },
-                risk_score: riskAssessment?.score,
-                risk_level: riskAssessment?.level.toLowerCase() as any,
+                patient_id: patient.id || patient.patient_id,
+                symptoms: symptomsArray.length > 0 ? symptomsArray : [symptoms],
+                vital_signs: Object.keys(vital_signs).length > 0 ? vital_signs : undefined,
+                urgency_level,
+                notes: `Referral Type: ${referralType}. Risk Score: ${riskAssessment.score}%`,
             });
+            
             router.replace('/(tabs)');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to create referral', error);
+            const errorMsg = error?.message || 'Failed to create referral';
+            setApiError(errorMsg);
+            
+            // Show user-friendly error messages
+            if (errorMsg.includes('404') || errorMsg.includes('not found')) {
+                setApiError('Patient not found. Please try again.');
+            } else if (errorMsg.includes('403') || errorMsg.includes('Access denied')) {
+                setApiError('You do not have permission to create referrals.');
+            } else if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+                setApiError('Session expired. Please log in again.');
+            } else {
+                setApiError(`Error: ${errorMsg}`);
+            }
         } finally {
             setLoading(false);
         }
@@ -87,32 +188,57 @@ export default function NewReferralScreen() {
                     <TextInput
                         label="Key Symptoms"
                         value={symptoms}
-                        onChangeText={setSymptoms}
+                        onChangeText={(text) => {
+                            setSymptoms(text);
+                            if (errors.symptoms) {
+                                setErrors({...errors, symptoms: ''});
+                            }
+                        }}
                         mode="outlined"
                         multiline
                         numberOfLines={4}
                         style={styles.input}
                         placeholder="Describe the patient's condition..."
+                        error={!!errors.symptoms}
                     />
+                    {errors.symptoms && <HelperText type="error" visible={true}>{errors.symptoms}</HelperText>}
 
                     <View style={styles.row}>
-                        <TextInput
-                            label="Blood Pressure"
-                            value={bp}
-                            onChangeText={setBp}
-                            mode="outlined"
-                            style={[styles.input, { flex: 1, marginRight: 8 }]}
-                            placeholder="e.g. 120/80"
-                        />
-                        <TextInput
-                            label="Hemoglobin (g/dL)"
-                            value={hemoglobin}
-                            onChangeText={setHemoglobin}
-                            mode="outlined"
-                            keyboardType="numeric"
-                            style={[styles.input, { flex: 1 }]}
-                            placeholder="e.g. 11.5"
-                        />
+                        <View style={{ flex: 1, marginRight: 8 }}>
+                            <TextInput
+                                label="Blood Pressure"
+                                value={bp}
+                                onChangeText={(text) => {
+                                    setBp(text);
+                                    if (errors.bp) {
+                                        setErrors({...errors, bp: ''});
+                                    }
+                                }}
+                                mode="outlined"
+                                style={styles.input}
+                                placeholder="e.g. 120/80"
+                                error={!!errors.bp}
+                            />
+                            {errors.bp && <HelperText type="error" visible={true}>{errors.bp}</HelperText>}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <TextInput
+                                label="Hemoglobin (g/dL)"
+                                value={hemoglobin}
+                                onChangeText={(text) => {
+                                    setHemoglobin(text);
+                                    if (errors.hemoglobin) {
+                                        setErrors({...errors, hemoglobin: ''});
+                                    }
+                                }}
+                                mode="outlined"
+                                keyboardType="numeric"
+                                style={styles.input}
+                                placeholder="e.g. 11.5"
+                                error={!!errors.hemoglobin}
+                            />
+                            {errors.hemoglobin && <HelperText type="error" visible={true}>{errors.hemoglobin}</HelperText>}
+                        </View>
                     </View>
 
                     {!riskAssessment ? (
@@ -121,6 +247,7 @@ export default function NewReferralScreen() {
                             icon={() => <Brain size={18} color={theme.colors.primary} />}
                             onPress={handleAssessment}
                             style={styles.assessmentButton}
+                            disabled={loading}
                         >
                             Analyze Clinical Risk
                         </Button>
@@ -143,6 +270,12 @@ export default function NewReferralScreen() {
                                 {riskAssessment.level === 'HIGH' ? 'Immediate referral recommended.' : 'Follow standard PHC protocol.'}
                             </Text>
                         </GlassCard>
+                    )}
+                    
+                    {apiError && (
+                        <Surface style={styles.errorBox}>
+                            <Text style={styles.errorText}>{apiError}</Text>
+                        </Surface>
                     )}
 
                     <Button
@@ -212,5 +345,17 @@ const styles = StyleSheet.create({
         marginTop: 12,
         borderRadius: 8,
         paddingVertical: 4,
+    },
+    errorBox: {
+        backgroundColor: '#FFEBEE',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 16,
+        borderLeftWidth: 4,
+        borderLeftColor: '#D32F2F',
+    },
+    errorText: {
+        color: '#D32F2F',
+        fontSize: 14,
     },
 });

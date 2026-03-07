@@ -3,12 +3,19 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import 'react-native-reanimated';
 import { MD3LightTheme, PaperProvider } from 'react-native-paper';
+import { Provider } from 'react-redux';
 import theme from '../src/theme';
+import { store } from '../src/store';
 import { useColorScheme } from '@/components/useColorScheme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../src/services/api';
+import { initDatabase } from '../src/database';
+import { secureStorage } from '../src/services/secureStorage';
+import { encryptionService } from '../src/services/encryption';
+import { auditLog } from '../src/services/auditLog';
+import '../src/i18n'; // Initialize i18n
 
 
 export {
@@ -29,6 +36,34 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
+  // Initialize database and security services
+  useEffect(() => {
+    const initApp = async () => {
+      try {
+        // Initialize services in order
+        await encryptionService.initialize();
+        await secureStorage.initialize();
+        await initDatabase();
+        
+        // Start audit logging session
+        auditLog.startNewSession();
+        await auditLog.logSecurityEvent('app_initialized', 'info', {
+          platform: Platform.OS,
+          version: '1.0.0'
+        });
+        
+        console.log('App services initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize app services:', error);
+        await auditLog.logSecurityEvent('app_init_failed', 'critical', {
+          error: (error as Error).message
+        });
+      }
+    };
+    
+    initApp();
+  }, []);
+
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
@@ -45,9 +80,11 @@ export default function RootLayout() {
   }
 
   return (
-    <PaperProvider theme={theme}>
-      <RootLayoutNav />
-    </PaperProvider>
+    <Provider store={store}>
+      <PaperProvider theme={theme}>
+        <RootLayoutNav />
+      </PaperProvider>
+    </Provider>
   );
 }
 
@@ -60,22 +97,30 @@ function RootLayoutNav() {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = await AsyncStorage.getItem('auth_token');
-      const isLoggedIn = await AsyncStorage.getItem('is_logged_in');
-      const inAuthGroup = segments[0] === 'auth';
+      try {
+        // Check secure storage for authentication
+        const user = await authService.checkAuth();
+        const inAuthGroup = segments[0] === 'auth';
 
-      const user = (token || isLoggedIn === 'true') ? await authService.checkAuth() : null;
-
-      if (!user && !inAuthGroup) {
-        // Not authenticated and not in auth group, redirect to login
-        router.replace('/auth/login');
-      } else if (user && inAuthGroup) {
-        // Authenticated but in auth group, redirect to home
-        router.replace('/(tabs)');
+        // Only navigate if we're not already in the right place
+        if (!user && !inAuthGroup) {
+          // Not authenticated and not in auth group, redirect to OTP login
+          router.replace('/auth/otp-login');
+        } else if (user && inAuthGroup) {
+          // Authenticated but in auth group, redirect to home
+          router.replace('/(tabs)');
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        // On error, redirect to login
+        if (segments[0] !== 'auth') {
+          router.replace('/auth/otp-login');
+        }
+      } finally {
+        setIsReady(true);
       }
-
-      setIsReady(true);
     };
+    
     initAuth();
   }, [segments]);
 
