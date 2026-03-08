@@ -1,0 +1,14 @@
+{
+    "name": "chat-orchestrator",
+    "version": "1.0.0",
+    "description": "Chat Orchestrator for AWS Lambda",
+    "main": "index.js",
+    "dependencies": {
+        "@ai-sdk/amazon-bedrock": "^4.0.77",
+        "@ai-sdk/mcp": "^1.0.25",
+        "@aws-sdk/client-cognito-identity-provider": "^3.1004.0",
+        "@modelcontextprotocol/sdk": "^1.27.1",
+        "ai": "^6.0.116",
+        "zod": "^4.3.6"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "name": "records-orchestrator",
+    "version": "1.0.0",
+    "description": "Records Orchestrator for AWS Lambda",
+    "main": "index.js",
+    "dependencies": {
+        "@aws-sdk/client-dynamodb": "^3.1004.0",
+        "@aws-sdk/lib-dynamodb": "^3.1004.0"
+    }
+}
