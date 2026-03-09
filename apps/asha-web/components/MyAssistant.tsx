@@ -6,8 +6,8 @@ import { DefaultChatTransport } from "ai";
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk";
 import { Thread } from "@assistant-ui/react-ui";
 import {
-    makeAssistantToolUI,
-    AssistantRuntimeProvider,
+  makeAssistantToolUI,
+  AssistantRuntimeProvider,
 } from "@assistant-ui/react";
 import { RegisterPatientCard, CreateReferralCard } from "./ToolCards";
 import { SparklesIcon } from "lucide-react";
@@ -18,32 +18,32 @@ import { SparklesIcon } from "lucide-react";
  */
 
 export function MyAssistant() {
-    const chat = useChat({
-        transport: new DefaultChatTransport({
-            api: "/api/chat",
-        }),
-    });
+  const chat = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+    }),
+  });
 
-    const runtime = useAISDKRuntime(chat);
+  const runtime = useAISDKRuntime(chat);
 
-    return (
-        <div className="flex-1 flex flex-col overflow-hidden w-full relative bg-deep-obsidian">
-            <AssistantRuntimeProvider runtime={runtime}>
-                <Thread
-                    tools={[
-                        makeAssistantToolUI({
-                            toolName: "register_patient",
-                            render: RegisterPatientCard,
-                        }),
-                        makeAssistantToolUI({
-                            toolName: "create_referral",
-                            render: CreateReferralCard,
-                        }),
-                    ]}
-                />
-            </AssistantRuntimeProvider>
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden w-full relative bg-deep-obsidian min-h-0">
+      <AssistantRuntimeProvider runtime={runtime}>
+        <Thread
+          tools={[
+            makeAssistantToolUI({
+              toolName: "register_patient",
+              render: RegisterPatientCard,
+            }),
+            makeAssistantToolUI({
+              toolName: "create_referral",
+              render: CreateReferralCard,
+            }),
+          ]}
+        />
+      </AssistantRuntimeProvider>
 
-            <style jsx global>{`
+      <style jsx global>{`
         /* Deep Obsidian Overrides */
         .aui-thread-root {
           background-color: transparent !important;
@@ -57,7 +57,33 @@ export function MyAssistant() {
         .aui-thread-viewport {
           background-color: transparent !important;
           padding-top: 1rem !important;
-          padding-bottom: 200px !important;
+          padding-bottom: 220px !important;
+          overflow-y: auto !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+        }
+
+        /* Custom Scrollbar for the chat */
+        .aui-thread-viewport::-webkit-scrollbar {
+          width: 8px !important;
+          display: block !important;
+        }
+
+        .aui-thread-viewport::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.03) !important;
+        }
+
+        .aui-thread-viewport::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2) !important;
+          border-radius: 10px !important;
+          border: 1px solid rgba(0, 0, 0, 0.2) !important;
+          background-clip: padding-box !important;
+        }
+
+        .aui-thread-viewport::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.35) !important;
+          background-clip: padding-box !important;
         }
 
         /* Message Bubbles */
@@ -140,6 +166,67 @@ export function MyAssistant() {
            box-shadow: 0 0 20px rgba(124, 58, 237, 0.4) !important;
         }
 
+        .aui-composer-attach {
+          display: none !important;
+        }
+
+        /* Collapsible Thinking Tags */
+        thinking {
+          display: block !important;
+          margin: 1.5rem 0 !important;
+          padding: 1.25rem !important;
+          padding-top: 2.5rem !important;
+          background: rgba(17, 17, 17, 0.5) !important;
+          border: 1px solid rgba(255, 255, 255, 0.05) !important;
+          border-radius: 12px !important;
+          font-family: var(--font-mono) !important;
+          font-size: 0.85rem !important;
+          color: #919191 !important;
+          line-height: 1.6 !important;
+          max-height: 48px !important;
+          overflow: hidden !important;
+          position: relative !important;
+          cursor: pointer !important;
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          white-space: pre-wrap !important;
+        }
+
+        thinking:hover {
+          max-height: 1000px !important;
+          background: rgba(17, 17, 17, 0.8) !important;
+          border-color: rgba(124, 58, 237, 0.2) !important;
+          color: #E3E3E3 !important;
+        }
+
+        thinking::before {
+          content: "THOUGHT PROCESS" !important;
+          position: absolute !important;
+          top: 0.75rem !important;
+          left: 1.25rem !important;
+          font-size: 0.65rem !important;
+          font-weight: 900 !important;
+          letter-spacing: 0.15em !important;
+          color: #7C3AED !important;
+          opacity: 0.8 !important;
+        }
+
+        thinking::after {
+          content: "Click to expand" !important;
+          position: absolute !important;
+          top: 0.75rem !important;
+          right: 1.25rem !important;
+          font-size: 0.65rem !important;
+          font-weight: bold !important;
+          color: #919191 !important;
+          opacity: 0.5 !important;
+          transition: opacity 0.3s ease !important;
+        }
+
+        thinking:hover::after {
+          content: "Expanded" !important;
+          opacity: 0.2 !important;
+        }
+
         .bg-gemini-gradient {
           background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 50%, #C026D3 100%);
         }
@@ -148,6 +235,6 @@ export function MyAssistant() {
           box-shadow: 0 0 25px rgba(124, 58, 237, 0.45);
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }

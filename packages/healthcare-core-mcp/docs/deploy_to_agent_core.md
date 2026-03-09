@@ -17,7 +17,7 @@ Before configuring your deployment, you need to set up a Cognito user pool for a
 After setting up authentication, create the deployment configuration:
 
 ```bash
-agentcore configure -e main.py --protocol SSE
+agentcore configure -e main.py --protocol MCP
 ```
 
 ## Deploy to AWS

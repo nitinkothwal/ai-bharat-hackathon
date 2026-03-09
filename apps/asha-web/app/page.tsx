@@ -16,7 +16,7 @@ import {
 
 export default function Home() {
   return (
-    <div className="flex-1 flex flex-col overflow-hidden max-w-5xl mx-auto w-full">
+    <div className="flex-1 flex flex-col overflow-hidden max-w-5xl mx-auto w-full min-h-0">
       <MyAssistant />
     </div>
   );

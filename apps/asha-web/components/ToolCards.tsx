@@ -42,9 +42,6 @@ export const RegisterPatientCard: React.FC<ToolCallMessagePartProps<any, any>> =
                         <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-xs font-mono text-white/90">
                             PID: {result.patient_id}
                         </div>
-                        <button className="text-[11px] font-bold text-indigo-400 uppercase tracking-widest hover:text-indigo-300 transition-colors">
-                            View Medical File
-                        </button>
                     </div>
                 </div>
             </div>

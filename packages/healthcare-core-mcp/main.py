@@ -97,12 +97,24 @@ def create_referral(patient_id: str, specialist_type: str, priority: str = "medi
         print(f"Error creating referral: {e}")
         return {"status": "error", "message": str(e)}
 
+from decimal import Decimal
+
+def convert_decimal(obj):
+    if isinstance(obj, list):
+        return [convert_decimal(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: convert_decimal(v) for k, v in obj.items()}
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    return obj
+
 @mcp.tool()
 def list_patients(limit: int = 10) -> dict:
     """Lists recent patients from the database."""
     try:
         response = patients_table.scan(Limit=limit)
-        return {"patients": response.get("Items", []), "count": response.get("Count", 0)}
+        items = convert_decimal(response.get("Items", []))
+        return {"patients": items, "count": response.get("Count", 0)}
     except Exception as e:
         print(f"Error listing patients: {e}")
         return {"status": "error", "message": str(e)}
@@ -116,13 +128,14 @@ def get_patient_referrals(patient_id: str) -> dict:
         patient_id: The ID of the patient.
     """
     try:
-        # Note: In production, you'd use a Global Secondary Index (GSI) on PatientID in the Referrals table.
-        # For simplicity in this demo, we use a filtered scan.
-        response = referrals_table.scan(
-            FilterExpression="PatientID = :pid",
+        # Use the Global Secondary Index (GSI) for efficient querying
+        response = referrals_table.query(
+            IndexName='PatientIndex',
+            KeyConditionExpression="PatientID = :pid",
             ExpressionAttributeValues={":pid": patient_id}
         )
-        return {"referrals": response.get("Items", []), "count": response.get("Count", 0)}
+        items = convert_decimal(response.get("Items", []))
+        return {"referrals": items, "count": response.get("Count", 0)}
     except Exception as e:
         print(f"Error getting referrals: {e}")
         return {"status": "error", "message": str(e)}

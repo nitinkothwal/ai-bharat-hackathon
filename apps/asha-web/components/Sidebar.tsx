@@ -47,20 +47,20 @@ export function Sidebar() {
                     description: "Chat with BharatCare AI",
                     color: "text-indigo-400"
                 },
-                {
-                    name: "New Registration",
-                    href: "/#register",
-                    icon: UserPlus,
-                    description: "Onboard new patient",
-                    color: "text-indigo-400"
-                },
-                {
-                    name: "Referral",
-                    href: "/#referral",
-                    icon: Stethoscope,
-                    description: "Create specialist referral",
-                    color: "text-indigo-400"
-                }
+                // {
+                //     name: "New Registration",
+                //     href: "/#register",
+                //     icon: UserPlus,
+                //     description: "Onboard new patient",
+                //     color: "text-indigo-400"
+                // },
+                // {
+                //     name: "Referral",
+                //     href: "/#referral",
+                //     icon: Stethoscope,
+                //     description: "Create specialist referral",
+                //     color: "text-indigo-400"
+                // }
             ]
         },
         {
@@ -94,7 +94,7 @@ export function Sidebar() {
                         <ShieldCheck className="text-white" size={24} />
                     </div>
                     {isOpen && (
-                        <span className="font-bold tracking-tight text-lg gemini-gradient">BharatCare</span>
+                        <span className="font-bold tracking-tight text-lg gemini-gradient">BharatCare Link</span>
                     )}
                 </Link>
             </div>
